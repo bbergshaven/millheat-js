@@ -4,6 +4,8 @@ import { HomeListResult } from "./models/home-result";
 import { Result } from "./models/result";
 import fetch, { Headers, RequestInit } from "node-fetch";
 
+const apiUrl = "https://api.millheat.com";
+
 export interface AccessToken {
   /// The parsed access token
   payload: MillheatAccessToken;
@@ -52,11 +54,7 @@ export class MillheatAPI {
       ...options,
     };
     this.credential = credential;
-    this.authenticator = new Authenticator(
-      credential,
-      "https://api.millheat.com",
-      this.agent
-    );
+    this.authenticator = new Authenticator(credential, apiUrl, this.agent);
   }
 
   private async api<T>(
@@ -101,13 +99,11 @@ export class MillheatAPI {
     }
   }
 
-  async getHomeList(homeId: string): Promise<HomeListResult> {
+  async getHomeList(): Promise<HomeListResult> {
     let response = await this.api<HomeListResult>(
-      "https://api.millheat.com/uds/selectHomeList",
+      `${apiUrl}/uds/selectHomeList`,
       {},
-      {
-        homeId: homeId,
-      }
+      {}
     );
     if (response.success) {
       return response.data;
