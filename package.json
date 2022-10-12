@@ -1,15 +1,10 @@
 {
   "name": "millheat-js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Javascript client to ease the use of the Mill Open API",
-  "module": "dist/millheat-js.mjs",
   "typings": "dist/millheat-js.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/millheat-js.mjs",
-      "types": "./dist/millheat-js.d.ts"
-    }
-  },
+  "type": "module",
+  "main": "dist/millheat-js.mjs",
   "scripts": {
     "build": "rollup -c"
   },
@@ -30,7 +25,6 @@
   "devDependencies": {
     "@types/node-fetch": "^2.6.1",
     "esbuild": "^0.14.28",
-    "msw": "^0.41.0",
     "node-fetch": "^3",
     "rollup": "^2.70.1",
     "rollup-plugin-dts": "^4.2.0",
