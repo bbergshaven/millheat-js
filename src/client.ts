@@ -1,8 +1,19 @@
 import { Authenticator } from "./authenticator";
 import { Agent } from "https";
-import { HomeListResult } from "./models/home-result";
-import { Result } from "./models/result";
-import fetch, { Headers, RequestInit } from "node-fetch";
+import { Headers, RequestInit } from "node-fetch";
+import { Home } from "./models/home-result";
+import { APIMethod, execute } from "./api";
+import { IndependentDevice } from "./models/independent-device-item";
+import { RoomItem } from "./models/room-item";
+import {
+  DeviceAPIMethod,
+  DeviceByRoomAPIMethod,
+  HomeListAPIMethod,
+  IndependentDeviceAPIMethod,
+  RoomByHomeAPIMethod,
+} from "./models/methods";
+import { DeviceItem } from "./models/device-item";
+import { DeviceInfoItem } from "./models/device-info-item";
 
 const apiUrl = "https://api.millheat.com";
 
@@ -57,13 +68,11 @@ export class MillheatAPI {
     this.authenticator = new Authenticator(credential, apiUrl, this.agent);
   }
 
-  private async api<T>(
+  private async api<T extends APIMethod>(
     input: string,
     init: RequestInit,
-    request: any
-  ): Promise<Result<T>> {
-    const AbortController =
-      globalThis.AbortController || (await import("abort-controller")).default;
+    request: T["parameters"]
+  ) {
     let headers = new Headers(init ? init.headers : undefined);
     let authenticationHeaders = await this.authenticator.authenticate();
     for (let [key, value] of authenticationHeaders) {
@@ -73,41 +82,64 @@ export class MillheatAPI {
     let requestInit = {
       ...init,
       agent: this.agent,
-      method: "POST",
       headers: headers,
-      body: new URLSearchParams(request),
     };
 
-    let cancelController = new AbortController();
-    let cancelTimeout = setTimeout(() => {
-      cancelController.abort();
-    }, this.options.timeout);
-
-    try {
-      let response = await fetch(input, requestInit);
-      if (response.status === 200) {
-        let data = (await response.json()) as Result<T>;
-        if (data.success) {
-          return data;
-        }
-      }
-      return Promise.reject(new Error("Unexpected error"));
-    } catch (error) {
-      return Promise.reject(error);
-    } finally {
-      clearTimeout(cancelTimeout);
-    }
+    return execute(input, requestInit, request, this.options.timeout);
   }
 
-  async getHomeList(): Promise<HomeListResult> {
-    let response = await this.api<HomeListResult>(
+  async selectDevice2020(deviceId: string): Promise<DeviceInfoItem> {
+    let response = await this.api<DeviceAPIMethod>(
+      `${apiUrl}/uds/selectDevice2020`,
+      {},
+      {
+        deviceId,
+      }
+    );
+    return response;
+  }
+
+  async getIndependentDevices2020(
+    homeId: string
+  ): Promise<IndependentDevice[]> {
+    let response = await this.api<IndependentDeviceAPIMethod>(
+      `${apiUrl}/uds/getIndependentDevices2020`,
+      {},
+      {
+        homeId,
+      }
+    );
+    return response.deviceInfoList;
+  }
+
+  async selectDeviceByRoom2020(roomId: string): Promise<DeviceItem[]> {
+    let response = await this.api<DeviceByRoomAPIMethod>(
+      `${apiUrl}/uds/selectDevicebyRoom2020`,
+      {},
+      {
+        roomId,
+      }
+    );
+    return response.deviceList;
+  }
+
+  async selectHomeList(): Promise<Home[]> {
+    let response = await this.api<HomeListAPIMethod>(
       `${apiUrl}/uds/selectHomeList`,
       {},
-      {}
+      null
     );
-    if (response.success) {
-      return response.data;
-    }
-    return Promise.reject(response.message);
+    return response.homeList;
+  }
+
+  async selectRoomByHome2020(homeId: string): Promise<RoomItem[]> {
+    let response = await this.api<RoomByHomeAPIMethod>(
+      `${apiUrl}/uds/selectRoombyHome2020`,
+      {},
+      {
+        homeId,
+      }
+    );
+    return response.roomList;
   }
 }

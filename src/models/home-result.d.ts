@@ -1,9 +1,3 @@
-import { Result } from "./result";
-
-type HomeList = {
-  homeList: Home[];
-};
-
 export type Home = {
   homeName: string;
   isHoliday: boolean;
@@ -19,6 +13,3 @@ export type Home = {
   homeId: number;
   programId: number;
 };
-
-/** Result of a selectHomeList operation. */
-export type HomeListResult = Result<HomeList>;

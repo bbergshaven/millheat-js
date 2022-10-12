@@ -8,11 +8,6 @@ export default [
     external: ["node-fetch", "abort-controller", "https"],
     output: [
       {
-        file: `dist/millheat-js.cjs`,
-        format: "cjs",
-        sourcemap: true,
-      },
-      {
         file: `dist/millheat-js.mjs`,
         format: "esm",
         sourcemap: true,

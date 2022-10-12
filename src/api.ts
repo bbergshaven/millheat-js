@@ -63,21 +63,8 @@ export class APIError extends Error {
 }
 
 export interface APIMethod {
-  method: string;
   parameters: {} | null;
   resultType: {};
-  errorType: {
-    trace?: string;
-  };
-}
-
-export type APIReturnType<T extends APIMethod> =
-  | { type: "result"; result: T["resultType"] }
-  | { type: "error"; error: APIError };
-
-export interface APIRequest<T extends APIMethod> {
-  method: string;
-  params: T["parameters"];
 }
 
 export interface APIErrorResponse {
@@ -90,9 +77,9 @@ export interface APIErrorResponse {
 export async function execute<T extends APIMethod>(
   input: RequestInfo,
   init: RequestInit,
-  request: APIRequest<T>,
+  request: T["parameters"],
   timeout: number
-): Promise<APIReturnType<T>> {
+): Promise<T["resultType"]> {
   const AbortController =
     globalThis.AbortController || (await import("abort-controller")).default;
 
@@ -102,31 +89,29 @@ export async function execute<T extends APIMethod>(
   }, timeout);
 
   let headers = new Headers(init.headers);
+  let params = new URLSearchParams();
+  if (request) {
+    for (let [key, value] of Object.entries(request)) {
+      params.append(key, `${value}`);
+    }
+  }
 
   let requestInit = {
     ...init,
-    body: JSON.stringify({}),
+    body: new URLSearchParams(params),
     method: "POST",
     signal: cancelController.signal as AbortSignal,
     headers: headers,
   };
-
   try {
     let response = await fetch(input, requestInit);
     if (response.status === 200) {
-      let res = (await response.json()) as Result<T>;
-      if (res.success) {
-        return { type: "result", result: res.data };
+      let payload = (await response.json()) as Result<T>;
+      if (payload.success) {
+        return payload.data;
+      } else if (payload.errorCode) {
+        return Promise.reject(new APIError(payload));
       }
-      return {
-        type: "error",
-        error: new APIError({
-          errorCode: res.errorCode,
-          message: res.message,
-          statusCode: res.statusCode,
-          success: res.success,
-        }),
-      };
     }
     return Promise.reject(new Error("Unexpected error"));
   } catch (error) {

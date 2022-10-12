@@ -4,13 +4,12 @@
   "private": true,
   "description": "Access Millheats API with ease",
   "scripts": {
-    "start": "ts-node --esm ./src/list-homes.ts"
+    "start": "ts-node --esm ./src/examples.ts"
   },
   "type": "module",
-  "author": "Searis AS",
+  "author": "Bernt-Johan Bergshaven",
   "license": "MIT",
   "devDependencies": {
-    "millheat-js-api": "file:~/millheat-js-api-0.0..tgz",
     "ts-node": "^10.7.0",
     "typescript": "4.7"
   },
