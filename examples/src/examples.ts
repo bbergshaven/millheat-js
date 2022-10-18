@@ -1,14 +1,16 @@
+import * as dotenv from "dotenv";
 import { Client } from "millheat-js";
 
+dotenv.config();
 let client = new Client({
-  access_key: "74d6d912db524d4e813b2aee99947393",
-  secret_token: "94f77a25b3434abd8a562919dc8ad1f5",
-  username: "bbergshaven@gmail.com",
-  password: "XrssmKDMssjQDWEfad2taPBB",
+  access_key: process.env.MILL_ACCESS_KEY!,
+  secret_token: process.env.MILL_SECRET_TOKEN!,
+  username: process.env.MILL_USERNAME!,
+  password: process.env.MILL_PASSWORD!,
 });
 
 let hl = await client.selectHomeList();
-console.log("selectHomeList", hl);
+console.log("selectHomeList", hl.length);
 
 let id = await client.getIndependentDevices2020("202210061411230016");
 console.log("getIndependentDevices2020", id);

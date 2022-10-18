@@ -105,8 +105,8 @@ export class Authenticator {
           payload: JSON.parse(decoded),
           access_token: payload.data.access_token,
           refresh_token: payload.data.refresh_token,
-          expireTime: new Date(Date.now() + payload.data.expireTime * 1000),
-          refresh_expireTime: new Date(
+          expireTime: new Date(payload.data.expireTime),
+          refresh_expireTime: new Date(payload.data.refresh_expireTime),
             Date.now() + payload.data.refresh_expireTime * 1000
           ),
         };

@@ -15,5 +15,8 @@
   },
   "volta": {
     "extends": "../package.json"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3"
   }
 }
