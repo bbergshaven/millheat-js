@@ -1,6 +1,6 @@
 {
   "name": "millheat-js",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Javascript client to ease the use of the Mill Open API V2",
   "typings": "dist/millheat-js.d.ts",
   "type": "module",

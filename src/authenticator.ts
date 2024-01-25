@@ -86,7 +86,6 @@ export class Authenticator {
       try {
         let parts = payload.idToken.split(".");
         let decoded = JSON.parse(Buffer.from(parts[1], "base64").toString()) as TokenPayload;
-        console.log(decoded);
         return {
           ...payload,
             expireTime: Date.now() + decoded.exp - decoded.iat,
