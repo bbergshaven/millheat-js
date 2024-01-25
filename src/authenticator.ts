@@ -1,17 +1,19 @@
-import { AccessToken, MillCredential } from "./client";
+import { MillCredential } from "./client";
 import fetch from "node-fetch";
 import { type Agent } from "https";
-import { Result } from "./models/result";
 
-type AuthorizationCode = {
-  authorization_code: string;
-};
+interface Token {
+  idToken: string;
+  refreshToken: string;
+  expireTime: number;
+  refreshExpireTime: number;
+}
 
 interface TokenPayload {
-  access_token: string;
-  refresh_token: string;
-  expireTime: number;
-  refresh_expireTime: number;
+  sub: string;
+  type: 'id',
+  iat: number;
+  exp: number;
 }
 
 type AuthenticatorStatus =
@@ -20,11 +22,11 @@ type AuthenticatorStatus =
     }
   | {
       type: "authenticating";
-      result: Promise<AccessToken>;
+      result: Promise<Token>;
     }
   | {
       type: "authenticated";
-      accessToken: AccessToken;
+      accessToken: Token;
     }
   | {
       type: "failed";
@@ -42,15 +44,15 @@ export class Authenticator {
 
   async authenticate() {
     let accessToken = await this.retrieveAccessToken();
-    return [["access_token", `${accessToken.access_token}`]];
+    return [["Authorization", `Bearer ${accessToken.idToken}`]];
   }
 
-  private async retrieveAccessToken(): Promise<AccessToken> {
+  private async retrieveAccessToken(): Promise<Token> {
     switch (this.status.type) {
       case "authenticating":
         return await this.status.result;
       case "authenticated":
-        if (new Date() < this.status.accessToken.expireTime) {
+        if (Date.now() < this.status.accessToken.expireTime) {
           return this.status.accessToken;
         }
     }
@@ -66,55 +68,32 @@ export class Authenticator {
     }
   }
 
-  private async refresh() {
-    let authCodeResponse = await fetch(`${this.apiURL}/share/applyAuthCode`, {
+  private async refresh(): Promise<Token> {
+    let response = await fetch(`${this.apiURL}/customer/auth/sign-in
+    `, {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        access_key: this.credentials.access_key,
-        secret_token: this.credentials.secret_token,
+        "Content-Type": "application/json",
       },
-      agent: this.agent,
-    });
-    let codePayload =
-      (await authCodeResponse.json()) as Result<AuthorizationCode>;
-    if (codePayload.success === false) {
-      return Promise.reject(new Error(codePayload.message));
-    }
-    let response = await fetch(`${this.apiURL}/share/applyAccessToken`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        authorization_code: codePayload.data.authorization_code,
-      },
-      body: new URLSearchParams({
-        username: this.credentials.username,
-        password: this.credentials.password,
+      body: JSON.stringify({
+        login: this.credentials.username,
+        password: this.credentials.password
       }),
       agent: this.agent,
     });
-    let payload = (await response.json()) as Result<TokenPayload>;
-    if (payload.success === false) {
-      return Promise.reject(new Error(payload.message));
-    }
-    if (payload && payload && payload.data.expireTime) {
+    
+    let payload = (await response.json()) as {idToken: string, refreshToken: string};
       try {
-        let parts = payload.data.access_token.split(".");
-        let decoded = Buffer.from(parts[1], "base64").toString();
-        let accessToken = {
-          payload: JSON.parse(decoded),
-          access_token: payload.data.access_token,
-          refresh_token: payload.data.refresh_token,
-          expireTime: new Date(payload.data.expireTime),
-          refresh_expireTime: new Date(payload.data.refresh_expireTime),
-            Date.now() + payload.data.refresh_expireTime * 1000
-          ),
-        };
-        return accessToken;
+        let parts = payload.idToken.split(".");
+        let decoded = JSON.parse(Buffer.from(parts[1], "base64").toString()) as TokenPayload;
+        console.log(decoded);
+        return {
+          ...payload,
+            expireTime: Date.now() + decoded.exp - decoded.iat,
+            refreshExpireTime: Date.now() + decoded.exp - decoded.iat,
+        }
       } catch (error) {
         return Promise.reject(error);
       }
-    }
-    return Promise.reject(new Error("Unknown payload"));
   }
 }

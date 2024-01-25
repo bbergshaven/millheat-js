@@ -1,25 +1,18 @@
 import * as dotenv from "dotenv";
-import { Client } from "millheat-js";
+import { Client } from "../../src";
 
 dotenv.config();
 let client = new Client({
-  access_key: process.env.MILL_ACCESS_KEY!,
-  secret_token: process.env.MILL_SECRET_TOKEN!,
   username: process.env.MILL_USERNAME!,
   password: process.env.MILL_PASSWORD!,
 });
 
-let hl = await client.selectHomeList();
-console.log("selectHomeList", hl.length);
+let hl = await client.getHouses();
+console.log("selectHomeList", hl);
 
-let id = await client.getIndependentDevices2020("202210061411230016");
-console.log("getIndependentDevices2020", id);
+let i1 = await client.getDevicesForHouse("213ff5d8-8039-4962-833d-00600493a1a6");
+console.log("getDevicesForHouse",  JSON.stringify(i1,null,2));
 
-let id2 = await client.selectRoomByHome2020("201901270925160000");
-console.log("selectRoomByHome2020", id2);
+let i2 = await client.getIndependentDevicesForHouse("213ff5d8-8039-4962-833d-00600493a1a6")
+console.log("getIndependentDevicesForHouse", JSON.stringify(i2,null,2));
 
-let device = await client.selectDevice2020("349272");
-console.log("selectDevice2020", device);
-
-let devices = await client.selectDeviceByRoom2020("202210061412449984");
-console.log("selectDeviceByRoom2020", devices);

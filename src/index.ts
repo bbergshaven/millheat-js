@@ -1,4 +1,6 @@
 export { MillheatAPI as Client } from "./client";
 
 // Data structures
-export type { Home } from "./models/home-result";
+export type { House } from "./models/house";
+export type { Metric } from "./models/metric";
+
