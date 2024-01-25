@@ -1,4 +1,4 @@
-import { APIMethod } from "src/api";
+import { APIMethod } from "../api";
 import { Metric } from "./metric";
 
 export type Device = {

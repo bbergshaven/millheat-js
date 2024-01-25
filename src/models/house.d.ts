@@ -1,4 +1,4 @@
-import { APIMethod } from "src/api";
+import { APIMethod } from "../api";
 
 export type House = {
     id: string;
